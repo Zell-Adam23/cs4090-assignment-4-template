@@ -123,3 +123,29 @@ def get_overdue_tasks(tasks):
         if not task.get("completed", False) and 
            task.get("due_date", "") < today
     ]
+
+def sort_tasks_by_due_date(tasks, ascending=True):
+    """
+    Sort tasks by their due date.
+    
+    Args:
+        tasks (list): List of task dictionaries
+        
+    Returns:
+        list: List of sorted tasks
+    """
+    return sorted(tasks, key=lambda x: x.get ("due_date", ""), reverse=not ascending)
+
+def mark_all_tasks_completed(tasks):
+    """
+    Marks all tasks as completed.
+    
+    Args:
+        tasks (list): List of task dictionaries
+        
+    Returns:
+        list: List of completed tasks
+    """
+    for task in tasks:
+        task["completed"] = True
+    return tasks

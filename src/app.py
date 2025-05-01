@@ -1,7 +1,14 @@
+import subprocess
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-from tasks import load_tasks, save_tasks, filter_tasks_by_priority, filter_tasks_by_category
+from tasks import load_tasks, save_tasks, filter_tasks_by_priority, filter_tasks_by_category, search_tasks, sort_tasks_by_due_date, mark_all_tasks_completed
+
+def run_test(command, label):
+    with st.spinner(f"Running {label}..."):
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        st.text_area(f"{label} Output", result.stdout + "\n" + result.stderr, height=300)
+
 
 def main():
     st.title("To-Do Application")
@@ -57,6 +64,25 @@ def main():
     if not show_completed:
         filtered_tasks = [task for task in filtered_tasks if not task["completed"]]
     
+    # Search by keyword
+    search_term = st.text_input("Search tasks")
+    if search_term:
+        filtered_tasks = search_tasks(filtered_tasks, search_term)
+
+    # Sorting by due date
+    sort_order = st.radio("Sort by Due Date", ["None", "Ascending", "Descending"], horizontal=True)
+    if sort_order == "Ascending":
+        filtered_tasks = sort_tasks_by_due_date(filtered_tasks, ascending=True)
+    elif sort_order == "Descending":
+        filtered_tasks = sort_tasks_by_due_date(filtered_tasks, ascending=False)
+
+    # Mark all as completed
+    if st.button("Mark All as Completed"):
+        filtered_tasks = mark_all_tasks_completed(filtered_tasks)
+        save_tasks(filtered_tasks)
+        st.success("All visible tasks marked as completed.")
+        st.rerun()
+
     # Display tasks
     for task in filtered_tasks:
         col1, col2 = st.columns([4, 1])
@@ -78,6 +104,24 @@ def main():
                 tasks = [t for t in tasks if t["id"] != task["id"]]
                 save_tasks(tasks)
                 st.rerun()
+
+    #Run Tests
+    st.sidebar.header("Run Tests")
+
+    if st.sidebar.button("Basic Test"):
+        run_test("pytest tests/test_basic.py", "Basic Test")
+
+    if st.sidebar.button("Advanced Test"):
+        run_test("pytest tests/test_advanced.py", "Advanced Test")
+
+    if st.sidebar.button("Property Test"):
+        run_test("pytest tests/test_property.py", "Property Test")
+
+    if st.sidebar.button("TDD Test"):
+        run_test("pytest tests/test_tdd.py", "TDD Test")
+
+    if st.sidebar.button("BDD Test"):
+        run_test("behave tests/feature", "BDD Test")
 
 if __name__ == "__main__":
     main()
